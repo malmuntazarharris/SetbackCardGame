@@ -8,8 +8,8 @@ Goals for this project:
    - [x] Card
    - [x] Deck
    - [x] Player
-   - [ ] Trick
-   - [ ] Round
+   - [x ] Trick
+   - [ x] Round
 - [ ] Rules and Scoring
 - [ ] text-based main.py
 - [ ] gui
