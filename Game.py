@@ -1,6 +1,8 @@
-from Player import Player
-from CardDeck import CardDeck
-
+import Card
+from Player import Player, Team
+import CardDeck
+# TODO: need to set up a text based main file
+# TODO: finish game mechanic test
 
 class Trick:
     def __init__(self, current_round):
@@ -8,6 +10,7 @@ class Trick:
         # adds current trick to round
         current_round.tricks.append(self)
         self.trick_winner = None
+        self.trick_is_over = False
 
     def add_to_trick(self, card, player):
         self.current_card_player_pairs.append((card, player))
@@ -47,12 +50,10 @@ class Trick:
             self.trick_winner = trump_card_pairs[1]
             return
 
-    def return_played_cards(self):
-        for pair in self.current_card_player_pairs:
-
-
 
 class Round:
+
+# TODO: set up the bidding system
     card_values = {
         "2": 0,
         "3": 0,
@@ -70,6 +71,8 @@ class Round:
     }
 
     def __init__(self, trump_suit, team_a, team_b):
+        if team_a is not Team or team_b is not Team:
+            raise TypeError
         self.trump_suit = trump_suit
         self.team_a = team_a
         self.team_b = team_b
@@ -77,17 +80,63 @@ class Round:
         self.high_winner = None
         self.low_winner = None
         self.jack_winner = None
-        self.point_winner = None
-        self.current_high_card = None
-        self.current_low_card = None
-        self.team_a_won_cards = []
-        self.team_b_won_cards = []
+        self.game_winner = None
+        # first value of tuple is bid amount, second value is what team it is
+        self.bid = ()
 
     def distribute_won_cards(self):
-        """loops for list of tricks and distributes the won cards to each team's list"""
+        """iterates through list of tricks and distributes the won cards to each team's list"""
         for trick in self.tricks:
-            if trick.trick_winner[1] is in team_a:
+            if trick.trick_winner[1] in self.team_a.players:
+                for pair in trick.current_card_player_pairs:
+                    self.team_a.won_cards.append(pair[0])
+            elif trick.trick_winner[1] in self.team_b.players:
+                for pair in trick.current_card_player_pairs:
+                    self.team_b.won_cards.append(pair[0])
 
+    def determine_high_winner(self):
+        """iterates through the list of won cards, sets the winner of each card type"""
+        # iterate through each list and find the max of all of them
+        for card in self.team_a.won_cards:
+            if card.suit == self.trump_suit and ((self.high_winner < card) or (self.high_winner is None)):
+                self.high_winner = card
+        for card in self.team_b.won_cards:
+            if card.suit == self.trump_suit and ((self.high_winner < card) or (self.high_winner is None)):
+                self.high_winner = card
+
+    def determine_low_winner(self):
+        # iterate through each list and find the min of all of them
+        for card in self.team_a.won_cards:
+            if card.suit == self.trump_suit and ((self.low_winner < card) or (self.low_winner is None)):
+                self.low_winner = card
+        for card in self.team_b.won_cards:
+            if card.suit == self.trump_suit and ((self.low_winner < card) or (self.low_winner is None)):
+                self.low_winner = card
+
+    def determine_jack_winner(self):
+        # '8' is the index for Jack
+        for card in self.team_a.won_cards:
+            if card.rank == Card.Card.jack_index and card.suit == self.trump_suit:
+                self.jack_winner = self.team_a
+        for card in self.team_b.won_cards:
+            if card.rank == Card.Card.jack_index and card.suit == self.trump_suit:
+                self.jack_winner = self.team_b
+
+    def determine_game_winner(self):
+        team_a_points = 0
+        team_b_points = 0
+
+        for card in self.team_a.won_cards:
+            team_a_points += self.card_values[Card.Card.ranks[card.rank]]
+        for card in self.team_b.won_cards:
+            team_b_points += self.card_values[Card.Card.ranks[card.rank]]
+
+        if team_a_points > team_b_points:
+            self.game_winner = self.team_a
+        elif team_b_points > team_a_points:
+            self.game_winner = self.team_b
+        else:
+            self.game_winner = (self.team_a, self.team_b)
 
 class Game:
     def __init__(self, team_a_name, team_b_name):
@@ -97,7 +146,7 @@ class Game:
         self.team_b_name = team_b_name
         self.team_a_points = 0
         self.team_b_points = 0
-        self.game_deck = CardDeck()
+        self.game_deck = CardDeck.CardDeck()
 
     def add_member_to_team_a(self, player):
         if player is not Player:

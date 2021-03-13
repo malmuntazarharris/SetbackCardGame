@@ -15,7 +15,7 @@ class CardDeck:
         """"Overrides the str operator"""
         string = ""
         for card in self.cards:
-            string + (str(card) + " ")
+            string += (str(card) + "\n")
         return string
 
     def __len__(self):

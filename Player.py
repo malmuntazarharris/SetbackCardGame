@@ -8,3 +8,9 @@ class Player:
         self.name = name
         self.hand = hand
         self.partner = partner
+
+
+class Team:
+    def __init__(self, player1, player2):
+        self.players = [player1, player2]
+        self.won_cards = None
